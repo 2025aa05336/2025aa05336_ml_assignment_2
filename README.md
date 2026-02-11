@@ -151,8 +151,9 @@ This application is designed to be deployed on Streamlit Community Cloud:
 - **Course**: Machine Learning (M.Tech AIML/DSE)
 - **Institution**: BITS Pilani Work Integrated Learning Programmes
 - **Assignment**: Assignment 2 - Classification & Deployment
-- **Author**: [Student Name]
-- **Date**: February 2026
+- **Author**: [Bhawani Paliwal]
+- **Student Id**: [2025AA05336]
+- **Date**: 11th February 2026
 
 ## License
-This project is developed for educational purposes as part of the BITS Pilani M.Tech program.
+This project is developed for educational purposes as part of the BITS Pilani AIML M.Tech program.

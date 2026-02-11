@@ -76,15 +76,15 @@ def load_default_dataset():
         local_dataset_path = "./heart_disease_data.csv"
         
         if os.path.exists(local_dataset_path):
-            st.info("📁 Using cached Heart Disease dataset...")
+            st.info("Using cached Heart Disease dataset...")
             data = pd.read_csv(local_dataset_path)
         else:
             # Download from Kaggle
-            with st.spinner("📥 Downloading Heart Disease dataset from Kaggle... This may take a moment."):
+            with st.spinner("Downloading Heart Disease dataset from Kaggle... This may take a moment."):
                 try:
                     # Download latest version
                     path = kagglehub.dataset_download("johnsmith88/heart-disease-dataset")
-                    st.success(f"✅ Dataset downloaded to: {path}")
+                    st.success(f"Dataset downloaded to: {path}")
                     
                     # Find the CSV file in the downloaded path
                     import glob
@@ -94,13 +94,13 @@ def load_default_dataset():
                         data = pd.read_csv(csv_files[0])
                         # Cache the dataset locally
                         data.to_csv(local_dataset_path, index=False)
-                        st.info("💾 Dataset cached locally for future use.")
+                        st.info("Dataset cached locally for future use.")
                     else:
                         st.error("No CSV files found in downloaded dataset!")
                         return create_fallback_dataset()
                         
                 except Exception as download_error:
-                    st.warning(f"⚠️ Could not download from Kaggle: {download_error}")
+                    st.warning(f"Could not download from Kaggle: {download_error}")
                     st.info("Using fallback synthetic dataset...")
                     return create_fallback_dataset()
         
@@ -133,22 +133,22 @@ def load_default_dataset():
                 # If still no target, use the last column
                 data = data.rename(columns={data.columns[-1]: 'target'})
         
-        st.success(f"🎯 Real Heart Disease dataset loaded successfully!")
-        st.info(f"📊 Dataset shape: {data.shape[0]} samples × {data.shape[1]} features")
+        st.success(f"Real Heart Disease dataset loaded successfully!")
+        st.info(f"Dataset shape: {data.shape[0]} samples × {data.shape[1]} features")
         
         return data
         
     except ImportError:
-        st.warning("⚠️ kagglehub not available. Using fallback synthetic dataset.")
+        st.warning("kagglehub not available. Using fallback synthetic dataset.")
         return create_fallback_dataset()
     except Exception as e:
-        st.warning(f"⚠️ Error loading Kaggle dataset: {e}")
+        st.warning(f"Error loading Kaggle dataset: {e}")
         st.info("Using fallback synthetic dataset...")
         return create_fallback_dataset()
 
 def create_fallback_dataset():
     """Create synthetic dataset if Kaggle download fails"""
-    st.info("🔄 Creating synthetic Heart Disease dataset...")
+    st.info("Creating synthetic Heart Disease dataset...")
     
     # Creating a synthetic heart disease dataset based on UCI repository
     np.random.seed(42)
@@ -230,12 +230,12 @@ def train_models(X_train, X_test, y_train, y_test):
             test_model.fit(X_test_small, y_test_small)  # This will fail if OpenMP is missing
             models['XGBoost (Ensemble)'] = XGBClassifier(random_state=42, eval_metric='logloss', verbosity=0)
         except Exception as e:
-            st.warning(f"⚠️ XGBoost runtime error (OpenMP issue): {str(e)[:100]}...")
+            st.warning(f"XGBoost runtime error (OpenMP issue): {str(e)[:100]}...")
             st.info("Using Gradient Boosting as alternative. XGBoost will work on Streamlit Cloud deployment.")
             from sklearn.ensemble import GradientBoostingClassifier
             models['Gradient Boosting (Alternative)'] = GradientBoostingClassifier(random_state=42, n_estimators=100)
     else:
-        st.warning("⚠️ XGBoost not available locally (import issue). It will work on Streamlit Cloud deployment.")
+        st.warning("XGBoost not available locally (import issue). It will work on Streamlit Cloud deployment.")
         # Add an alternative ensemble model for local testing
         from sklearn.ensemble import GradientBoostingClassifier
         models['Gradient Boosting (Alternative)'] = GradientBoostingClassifier(random_state=42, n_estimators=100)
@@ -250,8 +250,8 @@ def train_models(X_train, X_test, y_train, y_test):
                 try:
                     model.fit(X_train, y_train)
                 except Exception as xgb_error:
-                    st.error(f"❌ XGBoost failed during training: {str(xgb_error)[:100]}...")
-                    st.info("🔄 Replacing XGBoost with Gradient Boosting for this session.")
+                    st.error(f"XGBoost failed during training: {str(xgb_error)[:100]}...")
+                    st.info("Replacing XGBoost with Gradient Boosting for this session.")
                     # Replace with Gradient Boosting
                     from sklearn.ensemble import GradientBoostingClassifier
                     model = GradientBoostingClassifier(random_state=42, n_estimators=100)
@@ -292,8 +292,8 @@ def train_models(X_train, X_test, y_train, y_test):
             }
             
         except Exception as general_error:
-            st.error(f"❌ Error training {name}: {str(general_error)[:100]}...")
-            st.info(f"⏭️ Skipping {name} and continuing with other models.")
+            st.error(f"Error training {name}: {str(general_error)[:100]}...")
+            st.info(f"Skipping {name} and continuing with other models.")
             continue
     
     return results
@@ -373,7 +373,7 @@ def main():
                                ["Dataset Upload & Overview", "Model Training & Results", "Model Comparison"])
     
     if page == "Dataset Upload & Overview":
-        st.markdown('<h2 class="sub-header">📊 Dataset Upload & Overview</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 class="sub-header">Dataset Upload & Overview</h2>', unsafe_allow_html=True)
         
         # File upload option
         uploaded_file = st.file_uploader("Upload your CSV file", type=['csv'])
@@ -413,7 +413,7 @@ def main():
         st.session_state.data = data
         
     elif page == "Model Training & Results":
-        st.markdown('<h2 class="sub-header">🤖 Model Training & Results</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 class="sub-header"> Model Training & Results</h2>', unsafe_allow_html=True)
         
         if 'data' not in st.session_state:
             st.warning("Please upload a dataset first!")
@@ -432,7 +432,7 @@ def main():
         
         # If no standard target column found, let user select
         if target_col is None:
-            st.warning("⚠️ No standard target column found ('target', 'class', 'label', etc.)")
+            st.warning("No standard target column found ('target', 'class', 'label', etc.)")
             target_col = st.selectbox("Select target column for classification:", data.columns.tolist())
             if st.button("Confirm Target Column"):
                 st.session_state.target_confirmed = True
@@ -449,7 +449,7 @@ def main():
         y = data[target_col]
         
         # Display data types
-        with st.expander("📊 Data Type Analysis"):
+        with st.expander(" Data Type Analysis"):
             col1, col2 = st.columns(2)
             with col1:
                 st.write("**Feature Data Types:**")
@@ -474,7 +474,7 @@ def main():
         
         # Handle missing values
         if data.isnull().sum().sum() > 0:
-            st.warning(f"⚠️ Found {data.isnull().sum().sum()} missing values. Filling with appropriate defaults...")
+            st.warning(f"Found {data.isnull().sum().sum()} missing values. Filling with appropriate defaults...")
             # Fill numerical columns with median
             numeric_cols = X.select_dtypes(include=[np.number]).columns
             for col in numeric_cols:
@@ -489,7 +489,7 @@ def main():
             
             # Handle target missing values
             if y.isnull().sum() > 0:
-                st.error("❌ Target column has missing values. Please clean your data first.")
+                st.error(" Target column has missing values. Please clean your data first.")
                 return
         
         # Handle target variable encoding
@@ -497,29 +497,29 @@ def main():
         n_classes = len(original_target_values)
         
         if y.dtype == 'object' or any(isinstance(val, str) for val in original_target_values):
-            st.info(f"🔄 Converting string target labels to numerical")
+            st.info(f"Converting string target labels to numerical")
             st.info(f"Original labels: {original_target_values}")
             target_encoder = LabelEncoder()
             y_encoded = target_encoder.fit_transform(y)
             
             # Create and display mapping
             label_mapping = dict(zip(target_encoder.classes_, target_encoder.transform(target_encoder.classes_)))
-            st.success(f"✅ Label mapping: {label_mapping}")
+            st.success(f"Label mapping: {label_mapping}")
             y = pd.Series(y_encoded, index=y.index)
         else:
             # Check if numerical target needs encoding
             unique_vals = sorted(y.unique())
             if unique_vals != list(range(len(unique_vals))) or min(unique_vals) != 0:
-                st.info(f"🔄 Normalizing numerical target labels: {unique_vals} → {list(range(len(unique_vals)))}")
+                st.info(f"Normalizing numerical target labels: {unique_vals} → {list(range(len(unique_vals)))}")
                 mapping_dict = {val: i for i, val in enumerate(unique_vals)}
                 y = y.map(mapping_dict)
-                st.success(f"✅ Target mapping: {mapping_dict}")
+                st.success(f"Target mapping: {mapping_dict}")
         
         # Classification type detection
         if n_classes == 2:
-            st.info(f"🎯 Detected **Binary Classification** problem ({n_classes} classes)")
+            st.info(f"Detected **Binary Classification** problem ({n_classes} classes)")
         else:
-            st.info(f"🎯 Detected **Multi-class Classification** problem ({n_classes} classes)")
+            st.info(f"Detected **Multi-class Classification** problem ({n_classes} classes)")
         
         # Handle feature encoding
         preprocessing_info = []
@@ -548,12 +548,12 @@ def main():
         
         # Display preprocessing summary
         if preprocessing_info:
-            st.info("🏷️ **Feature Preprocessing:**")
+            st.info("**Feature Preprocessing:**")
             for info in preprocessing_info:
                 st.write(f"  • {info}")
         
         # Final data validation
-        st.success(f"✅ **Data Ready for Training:**")
+        st.success(f"**Data Ready for Training:**")
         st.write(f"  • Features: {X.shape[1]} columns, {X.shape[0]} rows")
         st.write(f"  • Target: {n_classes} classes, {len(y)} samples")
         st.write(f"  • All features are now numeric: {X.dtypes.apply(lambda x: 'numeric' if np.issubdtype(x, np.number) else 'other').unique()}")
@@ -613,7 +613,7 @@ def main():
         st.session_state.results = results
         
     elif page == "Model Comparison":
-        st.markdown('<h2 class="sub-header">📈 Model Comparison</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 class="sub-header">Model Comparison</h2>', unsafe_allow_html=True)
         
         if 'results' not in st.session_state:
             st.warning("Please train the models first!")

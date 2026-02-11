@@ -118,8 +118,9 @@ streamlit run app.py
 ```
 ├── app.py                 # Main Streamlit application
 ├── requirements.txt       # Python dependencies
-├── README.md             # Project documentation
-└── model/                # Directory for saved model artifacts
+├── README.md              # Project documentation
+└── heart_disease_data.csv # Default dataset used ofr initial model comparison
+└── test_models.py         # script to test application code
 ```
 
 ## Deployment
@@ -143,10 +144,10 @@ This application is designed to be deployed on Streamlit Community Cloud:
 ## Submission Links
 
 ### Repository Link
-🔗 **GitHub Repository**: [To be updated with actual repository link]
+🔗 **GitHub Repository**: [https://github.com/2025aa05336/2025aa05336_ml_assignment_2]
 
 ### Live Application Link
-🚀 **Streamlit App**: [To be updated with deployed app link]
+🚀 **Streamlit App**: [https://2025aa05336mlassignment2-lyzufxgeb2vmcbmpneut8a.streamlit.app/]
 
 ---
 

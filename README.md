@@ -79,16 +79,15 @@ This project implements six different classification algorithms as required:
 | Decision Tree | Non-linear model with high interpretability but prone to overfitting. Performance varies significantly with tree depth and pruning parameters. |
 | kNN | Instance-based learning sensitive to local structure and feature scaling. Performance depends heavily on the choice of k and distance metric. |
 | Naive Bayes | Probabilistic classifier with strong independence assumptions, works well with small datasets. Fast training but may underperform with correlated features. |
-| Random Forest (Ensemble) | Ensemble method reducing overfitting with good generalization performance. Balances bias-variance tradeoff effectively through bootstrap aggregation. |
-| XGBoost (Ensemble) | Gradient boosting method often achieving highest performance with feature importance. Requires careful hyperparameter tuning but typically provides best results. |
+| Random Forest (Ensemble) and XGBoost (Ensemble)| Ensemble methods achieved highest performance. Requires careful hyperparameter tuning but typically provides best results. |
 
 ## Key Findings
 
-1. **Best Performing Model**: XGBoost achieved the highest overall performance across most metrics
+1. **Best Performing Model**: XGBoost and RandomForest achieved the highest overall performance across most metrics
 2. **Most Interpretable**: Decision Tree provides the clearest decision rules
-3. **Most Robust**: Random Forest showed consistent performance with less overfitting
-4. **Fastest Training**: Naive Bayes had the quickest training time
-5. **Feature Importance**: Ensemble methods revealed chest pain type, maximum heart rate, and exercise angina as top predictive features
+3. **Fastest Training**: Naive Bayes had the quickest training time
+4. **Feature Importance**: Ensemble methods revealed chest pain type, maximum heart rate, and exercise angina as top predictive features
+
 
 ## Technical Implementation
 

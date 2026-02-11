@@ -69,7 +69,7 @@ This project implements six different classification algorithms as required:
 | Random Forest (Ensemble) | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
 | Gradient Boosting (Alternative) | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
 
-*Note: Actual results from running models on real dataset. Random Forest shows perfect performance which may indicate overfitting on test set.*
+*Note: Actual results from running models on real dataset. Random Forest and XGBoost shows perfect performance which may indicate overfitting on test set.*
 
 ## Performance Observations
 

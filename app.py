@@ -201,7 +201,7 @@ def display_metrics(results):
         })
     
     df_metrics = pd.DataFrame(metrics_data)
-    st.dataframe(df_metrics, use_container_width=True)
+    st.dataframe(df_metrics)
     
     return df_metrics
 
@@ -341,13 +341,24 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 st.write("**Feature Data Types:**")
-                st.write(X.dtypes)
+                # Convert dtypes to string to avoid Arrow conversion issues
+                dtypes_df = pd.DataFrame({
+                    'Feature': X.columns,
+                    'Data Type': [str(dtype) for dtype in X.dtypes]
+                })
+                st.dataframe(dtypes_df)
             with col2:
                 st.write("**Target Column Info:**")
                 st.write(f"Column: {target_col}")
-                st.write(f"Data Type: {y.dtype}")
+                st.write(f"Data Type: {str(y.dtype)}")
                 st.write(f"Unique Values: {list(y.unique())}")
-                st.write(f"Value Counts:\n{y.value_counts()}")
+                # Convert value counts to avoid Arrow issues
+                value_counts_df = pd.DataFrame({
+                    'Value': y.value_counts().index.astype(str),
+                    'Count': y.value_counts().values
+                })
+                st.write("**Value Counts:**")
+                st.dataframe(value_counts_df)
         
         # Handle missing values
         if data.isnull().sum().sum() > 0:
@@ -475,7 +486,7 @@ def main():
             # Confusion Matrix
             st.subheader("Confusion Matrix")
             cm_fig = create_confusion_matrix_plot(metrics['confusion_matrix'], selected_model)
-            st.plotly_chart(cm_fig, use_container_width=True)
+            st.plotly_chart(cm_fig)
         
         # Classification Report
         st.subheader("Classification Report")
@@ -514,7 +525,7 @@ def main():
         # Visual comparison
         st.subheader("Visual Metrics Comparison")
         comparison_fig = create_metrics_comparison_plot(results)
-        st.plotly_chart(comparison_fig, use_container_width=True)
+        st.plotly_chart(comparison_fig)
         
         # Performance observations
         st.subheader("Performance Observations")
@@ -538,7 +549,7 @@ def main():
             })
         
         obs_df = pd.DataFrame(obs_data)
-        st.dataframe(obs_df, use_container_width=True)
+        st.dataframe(obs_df)
 
 # Footer
 def show_footer():

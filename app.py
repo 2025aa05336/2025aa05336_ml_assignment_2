@@ -12,10 +12,10 @@ from sklearn.ensemble import RandomForestClassifier
 try:
     from xgboost import XGBClassifier
     XGBOOST_AVAILABLE = True
-except ImportError as e:
+except Exception as e:  # Changed from ImportError to Exception to catch OpenMP errors
     XGBOOST_AVAILABLE = False
     XGBClassifier = None
-    print(f"XGBoost not available: {e}")
+    print(f"XGBoost not available (OpenMP/Import issue): {e}")
 
 from sklearn.metrics import (accuracy_score, roc_auc_score, precision_score,
                            recall_score, f1_score, matthews_corrcoef, 
@@ -66,7 +66,7 @@ st.markdown("""
 st.markdown('<h1 class="main-header">🤖 Machine Learning Classification Models Comparison</h1>', unsafe_allow_html=True)
 
 # Load default dataset from Kaggle
-@st.cache
+@st.cache_data
 def load_default_dataset():
     """Load the real Heart Disease Classification dataset from Kaggle"""
     try:
@@ -208,7 +208,7 @@ def create_fallback_dataset():
     return data
 
 # Model training and evaluation functions
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def train_models(X_train, X_test, y_train, y_test):
     """Train all available models and return results"""
     models = {
@@ -221,9 +221,21 @@ def train_models(X_train, X_test, y_train, y_test):
     
     # Add XGBoost only if available
     if XGBOOST_AVAILABLE and XGBClassifier is not None:
-        models['XGBoost (Ensemble)'] = XGBClassifier(random_state=42, eval_metric='logloss', verbosity=0)
+        try:
+            # Test XGBoost with a simple dataset to check for runtime errors
+            test_model = XGBClassifier(random_state=42, eval_metric='logloss', verbosity=0)
+            # Create minimal test data
+            X_test_small = np.array([[1, 2], [3, 4]])
+            y_test_small = np.array([0, 1])
+            test_model.fit(X_test_small, y_test_small)  # This will fail if OpenMP is missing
+            models['XGBoost (Ensemble)'] = XGBClassifier(random_state=42, eval_metric='logloss', verbosity=0)
+        except Exception as e:
+            st.warning(f"⚠️ XGBoost runtime error (OpenMP issue): {str(e)[:100]}...")
+            st.info("Using Gradient Boosting as alternative. XGBoost will work on Streamlit Cloud deployment.")
+            from sklearn.ensemble import GradientBoostingClassifier
+            models['Gradient Boosting (Alternative)'] = GradientBoostingClassifier(random_state=42, n_estimators=100)
     else:
-        st.warning("⚠️ XGBoost not available locally (OpenMP issue). It will work on Streamlit Cloud deployment.")
+        st.warning("⚠️ XGBoost not available locally (import issue). It will work on Streamlit Cloud deployment.")
         # Add an alternative ensemble model for local testing
         from sklearn.ensemble import GradientBoostingClassifier
         models['Gradient Boosting (Alternative)'] = GradientBoostingClassifier(random_state=42, n_estimators=100)
@@ -231,39 +243,58 @@ def train_models(X_train, X_test, y_train, y_test):
     results = {}
     
     for name, model in models.items():
-        # Train model
-        model.fit(X_train, y_train)
-        
-        # Predictions
-        y_pred = model.predict(X_test)
-        y_pred_proba = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
-        
-        # Calculate metrics
-        accuracy = accuracy_score(y_test, y_pred)
-        
-        # Handle AUC score for multiclass
-        if len(np.unique(y_test)) > 2:
-            auc = roc_auc_score(y_test, model.predict_proba(X_test), multi_class='ovr')
-        else:
-            auc = roc_auc_score(y_test, y_pred_proba) if y_pred_proba is not None else 0.5
+        try:
+            # Train model with XGBoost error handling
+            if 'XGBoost' in name:
+                # Special handling for XGBoost to catch OpenMP runtime errors
+                try:
+                    model.fit(X_train, y_train)
+                except Exception as xgb_error:
+                    st.error(f"❌ XGBoost failed during training: {str(xgb_error)[:100]}...")
+                    st.info("🔄 Replacing XGBoost with Gradient Boosting for this session.")
+                    # Replace with Gradient Boosting
+                    from sklearn.ensemble import GradientBoostingClassifier
+                    model = GradientBoostingClassifier(random_state=42, n_estimators=100)
+                    model.fit(X_train, y_train)
+                    name = 'Gradient Boosting (XGBoost Alternative)'
+            else:
+                model.fit(X_train, y_train)
             
-        precision = precision_score(y_test, y_pred, average='weighted')
-        recall = recall_score(y_test, y_pred, average='weighted')
-        f1 = f1_score(y_test, y_pred, average='weighted')
-        mcc = matthews_corrcoef(y_test, y_pred)
-        
-        results[name] = {
-            'model': model,
-            'accuracy': accuracy,
-            'auc': auc,
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
-            'mcc': mcc,
-            'y_pred': y_pred,
-            'y_test': y_test,
-            'confusion_matrix': confusion_matrix(y_test, y_pred)
-        }
+            # Predictions
+            y_pred = model.predict(X_test)
+            y_pred_proba = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
+            
+            # Calculate metrics
+            accuracy = accuracy_score(y_test, y_pred)
+            
+            # Handle AUC score for multiclass
+            if len(np.unique(y_test)) > 2:
+                auc = roc_auc_score(y_test, model.predict_proba(X_test), multi_class='ovr')
+            else:
+                auc = roc_auc_score(y_test, y_pred_proba) if y_pred_proba is not None else 0.5
+                
+            precision = precision_score(y_test, y_pred, average='weighted')
+            recall = recall_score(y_test, y_pred, average='weighted')
+            f1 = f1_score(y_test, y_pred, average='weighted')
+            mcc = matthews_corrcoef(y_test, y_pred)
+            
+            results[name] = {
+                'model': model,
+                'accuracy': accuracy,
+                'auc': auc,
+                'precision': precision,
+                'recall': recall,
+                'f1': f1,
+                'mcc': mcc,
+                'y_pred': y_pred,
+                'y_test': y_test,
+                'confusion_matrix': confusion_matrix(y_test, y_pred)
+            }
+            
+        except Exception as general_error:
+            st.error(f"❌ Error training {name}: {str(general_error)[:100]}...")
+            st.info(f"⏭️ Skipping {name} and continuing with other models.")
+            continue
     
     return results
 
@@ -611,17 +642,22 @@ def main():
         # Performance observations
         st.subheader("Performance Observations")
         
-        observations = {
+        # Create dynamic observations based on actual trained models
+        base_observations = {
             'Logistic Regression': 'Linear model good for linearly separable data with interpretable coefficients.',
             'Decision Tree': 'Non-linear model with high interpretability but prone to overfitting.',
             'kNN': 'Instance-based learning sensitive to local structure and feature scaling.',
             'Naive Bayes': 'Probabilistic classifier with strong independence assumptions, works well with small datasets.',
             'Random Forest (Ensemble)': 'Ensemble method reducing overfitting with good generalization performance.',
-            'XGBoost (Ensemble)': 'Gradient boosting method often achieving highest performance with feature importance.'
+            'XGBoost (Ensemble)': 'Gradient boosting method often achieving highest performance with feature importance.',
+            'Gradient Boosting (Alternative)': 'Gradient boosting ensemble method used as XGBoost alternative due to OpenMP issues locally.',
+            'Gradient Boosting (XGBoost Alternative)': 'Gradient boosting ensemble method replacing XGBoost due to runtime errors.'
         }
         
         obs_data = []
-        for model_name, obs in observations.items():
+        for model_name in results.keys():
+            # Get observation for this specific model
+            obs = base_observations.get(model_name, 'Ensemble/individual classifier with specific performance characteristics.')
             accuracy = results[model_name]['accuracy']
             obs_data.append({
                 'ML Model Name': model_name,

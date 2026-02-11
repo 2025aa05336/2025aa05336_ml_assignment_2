@@ -67,7 +67,7 @@ This project implements six different classification algorithms as required:
 | kNN | 0.8634 | 0.9629 | 0.8636 | 0.8634 | 0.8634 | 0.7269 |
 | Naive Bayes | 0.8293 | 0.9043 | 0.8315 | 0.8293 | 0.8288 | 0.6602 |
 | Random Forest (Ensemble) | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| Gradient Boosting (Alternative) | 0.9756 | 0.9876 | 0.9756 | 0.9756 | 0.9756 | 0.9512 |
+| Gradient Boosting (Alternative) | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
 
 *Note: Actual results from running models on real dataset. Random Forest shows perfect performance which may indicate overfitting on test set.*
 

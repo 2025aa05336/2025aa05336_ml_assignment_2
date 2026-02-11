@@ -295,11 +295,7 @@ def test_models():
               f"{metrics['precision']:<10.4f} {metrics['recall']:<8.4f} "
               f"{metrics['f1']:<8.4f} {metrics['mcc']:<8.4f}")
     
-    print("\n🎉 All models tested successfully!")
-    print("\n📝 Next steps:")
-    print("1. Run 'streamlit run app.py' to launch the web application")
-    print("2. Upload your own dataset or use the default heart disease dataset")
-    print("3. Compare model performances interactively")
+    print("\n🎉 All models tested successfully locally!")
     
     return results
 

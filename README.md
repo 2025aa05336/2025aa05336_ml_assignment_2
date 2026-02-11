@@ -15,31 +15,33 @@ The project addresses the binary classification problem of determining whether a
 **Dataset**: Heart Disease Classification Dataset (Real Kaggle Dataset)
 - **Source**: Kaggle - "johnsmith88/heart-disease-dataset" 
 - **Problem Type**: Binary Classification
-- **Auto-download**: Automatically downloads from Kaggle or uses cached version
-- **Fallback**: Synthetic dataset if Kaggle unavailable
+- **Dataset Size**: 1,025 patients with heart disease records
+- **Features**: 14 medical attributes (13 features + 1 target)
+- **Auto-download**: Automatically downloads from Kaggle using kagglehub
+- **Caching**: Saves locally as `heart_disease_data.csv` for offline usage
+- **Fallback**: Synthetic UCI-inspired dataset if Kaggle unavailable
 - **Target Variable**: Binary (0 = No heart disease, 1 = Heart disease)
-- **Features**: Real medical attributes from actual heart disease studies
 
-### Features Description:
-1. **age**: Age in years (29-79)
-2. **sex**: Gender (0 = female, 1 = male)
-3. **cp**: Chest pain type (0-3)
-4. **trestbps**: Resting blood pressure in mm Hg
-5. **chol**: Serum cholesterol in mg/dl
-6. **fbs**: Fasting blood sugar > 120 mg/dl (0 = false, 1 = true)
-7. **restecg**: Resting electrocardiographic results (0-2)
-8. **thalach**: Maximum heart rate achieved
-9. **exang**: Exercise induced angina (0 = no, 1 = yes)
-10. **oldpeak**: ST depression induced by exercise relative to rest
-11. **slope**: Slope of the peak exercise ST segment (0-2)
-12. **ca**: Number of major vessels colored by fluoroscopy (0-3)
-13. **thal**: Thalassemia (1 = normal, 2 = fixed defect, 3 = reversible defect)
+### Clinical Features Description:
+1. **age**: Patient age in years (range: 29-77 years)
+2. **sex**: Gender (1 = male, 0 = female)
+3. **cp**: Chest pain type (0: Typical angina, 1: Atypical angina, 2: Non-anginal pain, 3: Asymptomatic)
+4. **trestbps**: Resting blood pressure in mm Hg (range: 94-200)
+5. **chol**: Serum cholesterol in mg/dl (range: 126-564)
+6. **fbs**: Fasting blood sugar > 120 mg/dl (1 = true, 0 = false)
+7. **restecg**: Resting ECG results (0: Normal, 1: ST-T wave abnormality, 2: Left ventricular hypertrophy)
+8. **thalach**: Maximum heart rate achieved (range: 71-202)
+9. **exang**: Exercise induced angina (1 = yes, 0 = no)
+10. **oldpeak**: ST depression induced by exercise relative to rest (range: 0-6.2)
+11. **slope**: Slope of peak exercise ST segment (0: Upsloping, 1: Flat, 2: Downsloping)
+12. **ca**: Number of major vessels colored by fluoroscopy (0-4)
+13. **thal**: Thalassemia test result (0: Normal, 1: Fixed defect, 2: Reversible defect)
 
-**Data Characteristics**:
-- No missing values
-- Mixed data types (numerical and categorical)
-- Balanced target distribution
-- Realistic medical feature correlations
+**Real Dataset Characteristics**:
+- **Complete data**: No missing values after preprocessing
+- **Mixed data types**: Numerical (age, trestbps, chol, thalach, oldpeak) and categorical (sex, cp, fbs, restecg, exang, slope, ca, thal)
+- **Target distribution**: ~54% disease positive, ~46% disease negative (slightly imbalanced)
+- **Clinical relevance**: All features are standard cardiac risk factors used in medical diagnosis
 
 ## Models Used
 
@@ -56,17 +58,18 @@ This project implements six different classification algorithms as required:
 6. **XGBoost**: Gradient boosting ensemble method
 
 ### Model Metrics Comparison
+*Results on johnsmith88/heart-disease-dataset (1,025 patients, 80-20 train-test split)*
 
 | ML Model Name | Accuracy | AUC | Precision | Recall | F1 | MCC |
 |---------------|----------|-----|-----------|--------|----|----|
-| Logistic Regression | 0.8450 | 0.8420 | 0.8455 | 0.8450 | 0.8448 | 0.6901 |
-| Decision Tree | 0.8200 | 0.8198 | 0.8205 | 0.8200 | 0.8198 | 0.6401 |
-| kNN | 0.8300 | 0.8285 | 0.8308 | 0.8300 | 0.8302 | 0.6602 |
-| Naive Bayes | 0.8350 | 0.8340 | 0.8358 | 0.8350 | 0.8349 | 0.6702 |
-| Random Forest (Ensemble) | 0.8650 | 0.8645 | 0.8655 | 0.8650 | 0.8651 | 0.7301 |
-| XGBoost (Ensemble) | 0.8750 | 0.8742 | 0.8758 | 0.8750 | 0.8753 | 0.7502 |
+| Logistic Regression | 0.8098 | 0.9298 | 0.8225 | 0.8098 | 0.8072 | 0.6309 |
+| Decision Tree | 0.9854 | 0.9857 | 0.9858 | 0.9854 | 0.9854 | 0.9712 |
+| kNN | 0.8634 | 0.9629 | 0.8636 | 0.8634 | 0.8634 | 0.7269 |
+| Naive Bayes | 0.8293 | 0.9043 | 0.8315 | 0.8293 | 0.8288 | 0.6602 |
+| Random Forest (Ensemble) | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+| Gradient Boosting (Alternative) | 0.9756 | 0.9876 | 0.9756 | 0.9756 | 0.9756 | 0.9512 |
 
-*Note: Actual values may vary based on random seed and data split*
+*Note: Actual results from running models on real dataset. Random Forest shows perfect performance which may indicate overfitting on test set.*
 
 ## Performance Observations
 

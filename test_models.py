@@ -1,28 +1,107 @@
 #!/usr/bin/env python3
 """
-Simple test script to verify that all ML models work correctly
+Test script for ML models using REAL heart disease dataset
 This can be run to test the core functionality without Streamlit
 """
 
 import pandas as pd
 import numpy as np
+import os
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
-from sklearn.metrics import (accuracy_score, roc_auc_score, precision_score, 
+# Handle XGBoost import gracefully
+try:
+    from xgboost import XGBClassifier
+    XGBOOST_AVAILABLE = True
+except Exception as e:
+    XGBOOST_AVAILABLE = False
+    XGBClassifier = None
+    print(f"XGBoost not available (OpenMP/Import issue): {e}")
+
+from sklearn.metrics import (accuracy_score, roc_auc_score, precision_score,
                            recall_score, f1_score, matthews_corrcoef, 
                            confusion_matrix, classification_report)
 import warnings
 
 warnings.filterwarnings('ignore')
 
-def generate_test_data():
-    """Generate test dataset"""
+def load_heart_disease_dataset():
+    """Load the real heart disease dataset"""
+    # Check if cached locally
+    local_dataset_path = "./heart_disease_data.csv"
+    
+    if os.path.exists(local_dataset_path):
+        print("📁 Using cached Heart Disease dataset...")
+        data = pd.read_csv(local_dataset_path)
+    else:
+        try:
+            import kagglehub
+            print("📥 Downloading Heart Disease dataset from Kaggle...")
+            
+            # Download latest version
+            path = kagglehub.dataset_download("johnsmith88/heart-disease-dataset")
+            print(f"✅ Dataset downloaded to: {path}")
+            
+            # Find the CSV file in the downloaded path
+            import glob
+            csv_files = glob.glob(os.path.join(path, "*.csv"))
+            
+            if csv_files:
+                data = pd.read_csv(csv_files[0])
+                # Cache the dataset locally
+                data.to_csv(local_dataset_path, index=False)
+                print("💾 Dataset cached locally for future use.")
+            else:
+                print("❌ No CSV files found in downloaded dataset!")
+                return create_fallback_dataset()
+                
+        except Exception as download_error:
+            print(f"❌ Could not download from Kaggle: {download_error}")
+            print("🔄 Using fallback synthetic dataset...")
+            return create_fallback_dataset()
+    
+    # Standardize column names for the real dataset
+    column_mapping = {
+        'HeartDisease': 'target',
+        'heart_disease': 'target', 
+        'target': 'target',
+        'output': 'target',
+        'result': 'target',
+        'class': 'target'
+    }
+    
+    # Apply column mapping
+    for old_name, new_name in column_mapping.items():
+        if old_name in data.columns:
+            data = data.rename(columns={old_name: new_name})
+            break
+    
+    # Ensure target column exists
+    if 'target' not in data.columns:
+        # Try to find the target column
+        possible_targets = ['HeartDisease', 'heart_disease', 'output', 'result', 'class']
+        for col in possible_targets:
+            if col in data.columns:
+                data = data.rename(columns={col: 'target'})
+                break
+        else:
+            # If still no target, use the last column
+            data = data.rename(columns={data.columns[-1]: 'target'})
+    
+    print(f"🎯 Real Heart Disease dataset loaded successfully!")
+    print(f"📊 Dataset shape: {data.shape[0]} samples × {data.shape[1]} features")
+    print(f"📈 Target distribution: {data['target'].value_counts().to_dict()}")
+    
+    return data
+
+def create_fallback_dataset():
+    """Generate synthetic dataset if real data unavailable"""
+    print("🔄 Creating synthetic Heart Disease dataset...")
     np.random.seed(42)
     n_samples = 1000
     
@@ -33,7 +112,7 @@ def generate_test_data():
     trestbps = np.random.normal(130, 17, n_samples).astype(int)
     chol = np.random.normal(246, 51, n_samples).astype(int)
     fbs = np.random.choice([0, 1], n_samples, p=[0.85, 0.15])
-    restecg = np.random.choice([0, 1, 2], n_samples, p=[0.52, 0.48, 0.006])
+    restecg = np.random.choice([0, 1, 2], n_samples, p=[0.52, 0.474, 0.006])
     thalach = np.random.normal(150, 22, n_samples).astype(int)
     exang = np.random.choice([0, 1], n_samples, p=[0.68, 0.32])
     oldpeak = np.random.exponential(1, n_samples).round(1)
@@ -79,19 +158,69 @@ def generate_test_data():
     
     return data
 
-def test_models():
-    """Test all 6 models and print results"""
-    print("🧪 Testing Machine Learning Models")
-    print("=" * 50)
-    
-    # Load data
-    print("📊 Loading test data...")
-    data = generate_test_data()
-    print(f"✅ Data loaded: {data.shape[0]} samples, {data.shape[1]} features")
-    
-    # Prepare features and target
+def preprocess_data(data):
+    """Preprocess the dataset"""
+    # Separate features and target
     X = data.drop('target', axis=1)
     y = data['target']
+    
+    print(f"🔧 Preprocessing data...")
+    print(f"   • Original shape: {X.shape}")
+    
+    # Handle missing values
+    if data.isnull().sum().sum() > 0:
+        print(f"   • Found {data.isnull().sum().sum()} missing values, filling...")
+        # Fill numerical columns with median
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            if X[col].isnull().sum() > 0:
+                X[col] = X[col].fillna(X[col].median())
+        
+        # Fill categorical columns with mode
+        categorical_cols = X.select_dtypes(include=['object']).columns
+        for col in categorical_cols:
+            if X[col].isnull().sum() > 0:
+                X[col] = X[col].fillna(X[col].mode()[0])
+    
+    # Handle target variable encoding
+    if y.dtype == 'object' or any(isinstance(val, str) for val in y.unique()):
+        print(f"   • Converting target labels: {list(y.unique())}")
+        target_encoder = LabelEncoder()
+        y = target_encoder.fit_transform(y)
+        label_mapping = dict(zip(target_encoder.classes_, target_encoder.transform(target_encoder.classes_)))
+        print(f"   • Label mapping: {label_mapping}")
+    
+    # Handle categorical features
+    categorical_features = X.select_dtypes(include=['object']).columns.tolist()
+    if categorical_features:
+        print(f"   • Encoding categorical features: {categorical_features}")
+        for col in categorical_features:
+            le = LabelEncoder()
+            X[col] = le.fit_transform(X[col])
+    
+    # Convert boolean features
+    boolean_features = X.select_dtypes(include=['bool']).columns.tolist()
+    if boolean_features:
+        print(f"   • Converting boolean features: {boolean_features}")
+        for col in boolean_features:
+            X[col] = X[col].astype(int)
+    
+    print(f"✅ Preprocessing complete: {X.shape}")
+    return X, y
+
+def test_models():
+    """Test all 6 models using REAL heart disease dataset"""
+    print("🏥 REAL HEART DISEASE DATASET - ML MODEL EVALUATION")
+    print("=" * 60)
+    
+    # Load real data
+    data = load_heart_disease_dataset()
+    if data is None:
+        print("❌ Could not load dataset!")
+        return None
+    
+    # Preprocess data
+    X, y = preprocess_data(data)
     
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
@@ -112,8 +241,15 @@ def test_models():
         'kNN': KNeighborsClassifier(n_neighbors=5),
         'Naive Bayes': GaussianNB(),
         'Random Forest (Ensemble)': RandomForestClassifier(n_estimators=100, random_state=42),
-        'XGBoost (Ensemble)': XGBClassifier(random_state=42, eval_metric='logloss', verbosity=0)
     }
+    
+    # Add XGBoost or alternative
+    if XGBOOST_AVAILABLE and XGBClassifier is not None:
+        models['XGBoost (Ensemble)'] = XGBClassifier(random_state=42, eval_metric='logloss', verbosity=0)
+    else:
+        print("⚠️ XGBoost not available, using Gradient Boosting alternative")
+        from sklearn.ensemble import GradientBoostingClassifier
+        models['Gradient Boosting (Alternative)'] = GradientBoostingClassifier(random_state=42, n_estimators=100)
     
     print("🤖 Training and evaluating models...")
     print()

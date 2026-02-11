@@ -65,10 +65,91 @@ st.markdown("""
 # Title
 st.markdown('<h1 class="main-header">🤖 Machine Learning Classification Models Comparison</h1>', unsafe_allow_html=True)
 
-# Load default dataset
+# Load default dataset from Kaggle
 @st.cache
 def load_default_dataset():
-    """Load the Heart Disease dataset as default"""
+    """Load the real Heart Disease Classification dataset from Kaggle"""
+    try:
+        import kagglehub
+        
+        # Check if dataset already exists locally
+        local_dataset_path = "./heart_disease_data.csv"
+        
+        if os.path.exists(local_dataset_path):
+            st.info("📁 Using cached Heart Disease dataset...")
+            data = pd.read_csv(local_dataset_path)
+        else:
+            # Download from Kaggle
+            with st.spinner("📥 Downloading Heart Disease dataset from Kaggle... This may take a moment."):
+                try:
+                    # Download latest version
+                    path = kagglehub.dataset_download("johnsmith88/heart-disease-dataset")
+                    st.success(f"✅ Dataset downloaded to: {path}")
+                    
+                    # Find the CSV file in the downloaded path
+                    import glob
+                    csv_files = glob.glob(os.path.join(path, "*.csv"))
+                    
+                    if csv_files:
+                        data = pd.read_csv(csv_files[0])
+                        # Cache the dataset locally
+                        data.to_csv(local_dataset_path, index=False)
+                        st.info("💾 Dataset cached locally for future use.")
+                    else:
+                        st.error("No CSV files found in downloaded dataset!")
+                        return create_fallback_dataset()
+                        
+                except Exception as download_error:
+                    st.warning(f"⚠️ Could not download from Kaggle: {download_error}")
+                    st.info("Using fallback synthetic dataset...")
+                    return create_fallback_dataset()
+        
+        # Standardize column names for the real dataset
+        # Common variations in heart disease datasets
+        column_mapping = {
+            'HeartDisease': 'target',
+            'heart_disease': 'target', 
+            'target': 'target',
+            'output': 'target',
+            'result': 'target',
+            'class': 'target'
+        }
+        
+        # Apply column mapping
+        for old_name, new_name in column_mapping.items():
+            if old_name in data.columns:
+                data = data.rename(columns={old_name: new_name})
+                break
+        
+        # Ensure target column exists
+        if 'target' not in data.columns:
+            # Try to find the target column
+            possible_targets = ['HeartDisease', 'heart_disease', 'output', 'result', 'class']
+            for col in possible_targets:
+                if col in data.columns:
+                    data = data.rename(columns={col: 'target'})
+                    break
+            else:
+                # If still no target, use the last column
+                data = data.rename(columns={data.columns[-1]: 'target'})
+        
+        st.success(f"🎯 Real Heart Disease dataset loaded successfully!")
+        st.info(f"📊 Dataset shape: {data.shape[0]} samples × {data.shape[1]} features")
+        
+        return data
+        
+    except ImportError:
+        st.warning("⚠️ kagglehub not available. Using fallback synthetic dataset.")
+        return create_fallback_dataset()
+    except Exception as e:
+        st.warning(f"⚠️ Error loading Kaggle dataset: {e}")
+        st.info("Using fallback synthetic dataset...")
+        return create_fallback_dataset()
+
+def create_fallback_dataset():
+    """Create synthetic dataset if Kaggle download fails"""
+    st.info("🔄 Creating synthetic Heart Disease dataset...")
+    
     # Creating a synthetic heart disease dataset based on UCI repository
     np.random.seed(42)
     n_samples = 1000

@@ -12,12 +12,13 @@ The project addresses the binary classification problem of determining whether a
 
 ## Dataset Description
 
-**Dataset**: Heart Disease Classification Dataset (UCI-inspired)
-- **Source**: Synthetic dataset based on UCI Heart Disease Database characteristics
+**Dataset**: Heart Disease Classification Dataset (Real Kaggle Dataset)
+- **Source**: Kaggle - "johnsmith88/heart-disease-dataset" 
 - **Problem Type**: Binary Classification
-- **Number of Instances**: 1000 samples
-- **Number of Features**: 13 features + 1 target variable
+- **Auto-download**: Automatically downloads from Kaggle or uses cached version
+- **Fallback**: Synthetic dataset if Kaggle unavailable
 - **Target Variable**: Binary (0 = No heart disease, 1 = Heart disease)
+- **Features**: Real medical attributes from actual heart disease studies
 
 ### Features Description:
 1. **age**: Age in years (29-79)
